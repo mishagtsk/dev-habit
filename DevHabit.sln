@@ -1,10 +1,29 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DevHabit.Api", "DevHabit.Api\DevHabit.Api.csproj", "{BF0D2BB9-CCCA-4431-A6D5-BB728C791D18}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{C294A8B6-D637-4573-87DC-D329682B6BDD}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{7A693E6C-C234-4A8E-95DD-897FEFC8FF6C}"
+	ProjectSection(SolutionItems) = preProject
+		docker-compose.yaml = docker-compose.yaml
+		.editorconfig = .editorconfig
+		Directory.Build.props = Directory.Build.props
+		Directory.Packages.props = Directory.Packages.props
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
 		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{BF0D2BB9-CCCA-4431-A6D5-BB728C791D18}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{BF0D2BB9-CCCA-4431-A6D5-BB728C791D18}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{BF0D2BB9-CCCA-4431-A6D5-BB728C791D18}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{BF0D2BB9-CCCA-4431-A6D5-BB728C791D18}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{BF0D2BB9-CCCA-4431-A6D5-BB728C791D18} = {C294A8B6-D637-4573-87DC-D329682B6BDD}
 	EndGlobalSection
 EndGlobal
