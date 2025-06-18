@@ -24,5 +24,9 @@ public class HabitConfiguration : IEntityTypeConfiguration<Habit>
         });
 
         builder.OwnsOne(x => x.Milestone);
+        
+        builder.HasMany<Tag>(x => x.Tags)
+            .WithMany()
+            .UsingEntity<HabitTag>();
     }
 }
