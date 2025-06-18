@@ -43,19 +43,9 @@ public sealed class HabitsController(ApplicationDbContext dbContext) : Controlle
 
     [HttpPost]
     public async Task<ActionResult<HabitDto>> CreateHabitAsync(CreateHabitDto createHabitDto,
-        IValidator<CreateHabitDto> validator, ProblemDetailsFactory problemDetailsFactory)
+        IValidator<CreateHabitDto> validator)
     {
-        ValidationResult? validationResult = await validator.ValidateAsync(createHabitDto);
-
-        if (!validationResult.IsValid)
-        {
-            ProblemDetails problemDetails = problemDetailsFactory.CreateProblemDetails(
-                HttpContext,
-                StatusCodes.Status400BadRequest);
-            problemDetails.Extensions.Add("errors", validationResult.ToDictionary());
-
-            return BadRequest(problemDetails);
-        }
+        await validator.ValidateAndThrowAsync(createHabitDto);
 
         Habit habit = createHabitDto.ToEntity();
 
