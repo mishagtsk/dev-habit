@@ -63,7 +63,7 @@ public static class HabitMappings
                 ? null
                 : new Milestone
                 {
-                    Current = dto.Milestone.Current,
+                    Current = 0,
                     Target = dto.Milestone.Target,
                 },
             CreatedAtUtc = DateTime.UtcNow,
@@ -71,4 +71,32 @@ public static class HabitMappings
         
         return habit;
     } 
+    
+    public static void UpdateFromDto(this Habit habit, UpdateHabitDto dto)
+    {
+        habit.Name = dto.Name;
+        habit.Description = dto.Description;
+        habit.Type = dto.Type;
+        habit.EndDate = dto.EndDate;
+
+        habit.Frequency = new Frequency
+        {
+            Type = dto.Frequency.Type,
+            TimesPerPeriod = dto.Frequency.TimesPerPeriod
+        };
+
+        habit.Target = new Target
+        {
+            Value = dto.Target.Value,
+            Unit = dto.Target.Unit,
+        };
+
+        if (dto.Milestone != null)
+        {
+            habit.Milestone ??= new Milestone();
+            habit.Milestone.Target = dto.Milestone.Target;
+        }
+
+        habit.UpdatedAtUtc = DateTime.UtcNow;
+    }
 }
