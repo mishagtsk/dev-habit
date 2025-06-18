@@ -1,7 +1,10 @@
 using DevHabit.Api.Database;
 using DevHabit.Api.DTOs.Tags;
 using DevHabit.Api.Entities;
+using FluentValidation;
+using FluentValidation.Results;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Infrastructure;
 using Microsoft.EntityFrameworkCore;
 
 namespace DevHabit.Api.Controllers;
@@ -42,15 +45,28 @@ public class TagsController(ApplicationDbContext dbContext) : ControllerBase
 
         return Ok(tag);
     }
-    
+
     [HttpPost]
-    public async Task<ActionResult<TagDto>> CreateTag(CreateTagDto createTagDto)
+    public async Task<ActionResult<TagDto>> CreateTag(CreateTagDto createTagDto, IValidator<CreateTagDto> validator,
+        ProblemDetailsFactory problemDetailsFactory)
     {
+        ValidationResult validationResult = await validator.ValidateAsync(createTagDto);
+
+        if (!validationResult.IsValid)
+        {
+            ProblemDetails problemDetails = problemDetailsFactory.CreateProblemDetails(
+                HttpContext,
+                StatusCodes.Status400BadRequest);
+            problemDetails.Extensions.Add("errors", validationResult.ToDictionary());
+            
+            return BadRequest(problemDetails);
+        }
+
         Tag tag = createTagDto.ToEntity();
 
         if (await dbContext.Tags.AnyAsync(t => t.Name == tag.Name))
         {
-            return Conflict($"The tag '{tag.Name}' already exists");
+            return Problem(detail: $"The tag '{tag.Name}' already exists", statusCode: StatusCodes.Status409Conflict);
         }
 
         dbContext.Tags.Add(tag);
@@ -61,7 +77,7 @@ public class TagsController(ApplicationDbContext dbContext) : ControllerBase
 
         return CreatedAtAction(nameof(GetTag), new { id = tagDto.Id }, tagDto);
     }
-    
+
     [HttpPut("{id}")]
     public async Task<ActionResult> UpdateTag(string id, UpdateTagDto updateTagDto)
     {

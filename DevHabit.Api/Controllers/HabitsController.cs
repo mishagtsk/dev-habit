@@ -2,8 +2,11 @@ using System.Linq.Expressions;
 using DevHabit.Api.Database;
 using DevHabit.Api.DTOs.Habits;
 using DevHabit.Api.Entities;
+using FluentValidation;
+using FluentValidation.Results;
 using Microsoft.AspNetCore.JsonPatch;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Infrastructure;
 using Microsoft.EntityFrameworkCore;
 
 namespace DevHabit.Api.Controllers;
@@ -39,16 +42,29 @@ public sealed class HabitsController(ApplicationDbContext dbContext) : Controlle
     }
 
     [HttpPost]
-    public async Task<ActionResult<HabitDto>> CreateHabitAsync(CreateHabitDto createHabitDto)
+    public async Task<ActionResult<HabitDto>> CreateHabitAsync(CreateHabitDto createHabitDto,
+        IValidator<CreateHabitDto> validator, ProblemDetailsFactory problemDetailsFactory)
     {
+        ValidationResult? validationResult = await validator.ValidateAsync(createHabitDto);
+
+        if (!validationResult.IsValid)
+        {
+            ProblemDetails problemDetails = problemDetailsFactory.CreateProblemDetails(
+                HttpContext,
+                StatusCodes.Status400BadRequest);
+            problemDetails.Extensions.Add("errors", validationResult.ToDictionary());
+
+            return BadRequest(problemDetails);
+        }
+
         Habit habit = createHabitDto.ToEntity();
-        
+
         dbContext.Habits.Add(habit);
-        
+
         await dbContext.SaveChangesAsync();
-        
+
         HabitDto habitDto = habit.ToDto();
-        
+
         return CreatedAtAction(nameof(GetHabit), new { id = habit.Id }, habitDto);
     }
 
