@@ -1,4 +1,5 @@
 using DevHabit.Api.Database;
+using DevHabit.Api.DTOs.Common;
 using DevHabit.Api.DTOs.Habits;
 using DevHabit.Api.Entities;
 using DevHabit.Api.Services.Sorting;
@@ -14,7 +15,7 @@ namespace DevHabit.Api.Controllers;
 public sealed class HabitsController(ApplicationDbContext dbContext) : ControllerBase
 {
     [HttpGet]
-    public async Task<ActionResult<HabitCollectionDto>> GetHabits([FromQuery] HabitQueryParameters query, 
+    public async Task<ActionResult<PaginationResult<HabitDto>>> GetHabits([FromQuery] HabitQueryParameters query, 
         SortMappingProvider sortMappingProvider)
     {
         query.Search = query.Search?.Trim().ToLower();
@@ -26,20 +27,17 @@ public sealed class HabitsController(ApplicationDbContext dbContext) : Controlle
                 detail: $"The provided sort parameter is not valid: {query.Sort}.");
         }
         SortMapping[] sortMappings = sortMappingProvider.GetMappings<HabitDto, Habit>();
-        
-        List<HabitDto> habits = await dbContext.Habits
+
+        IQueryable<HabitDto> habitsQuery = dbContext.Habits
             .Where(h => query.Search == null || 
                         h.Name.ToLower().Contains(query.Search) ||
                         h.Description != null && h.Description.ToLower().Contains(query.Search))
             .Where(h => query.Type == null || query.Type.Value == h.Type)
             .Where(h => query.Status == null || query.Status.Value == h.Status)
             .ApplySort(query.Sort, sortMappings)
-            .Select(HabitQueries.ProjectToDto())
-            .ToListAsync();
+            .Select(HabitQueries.ProjectToDto());
 
-        var habitCollectionDto = new HabitCollectionDto { Data = habits };
-        
-        return Ok(habitCollectionDto);
+        return Ok(await PaginationResult<HabitDto>.CreateAsync(habitsQuery, query.Page, query.PageSize));
     }
 
 
