@@ -10,5 +10,7 @@ public static class CustomMediaTypeNames
         public const string HateoasJsonVersionTemplate = "application/vnd.dev-habit.hateoas.{version}+json";
         public const string HateoasJsonV1 = "application/vnd.dev-habit.hateoas.1+json";
         public const string HateoasJsonV2 = "application/vnd.dev-habit.hateoas.2+json";
+        
+        public const string HateoasSubType = "hateoas";
     }
 }
