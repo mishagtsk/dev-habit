@@ -1,3 +1,4 @@
+using Asp.Versioning;
 using DevHabit.Api.Database;
 using DevHabit.Api.DTOs.Habits;
 using DevHabit.Api.Entities;
@@ -20,7 +21,7 @@ namespace DevHabit.Api;
 
 public static class DependencyInjection
 {
-    public static WebApplicationBuilder AddControllers(this WebApplicationBuilder builder)
+    public static WebApplicationBuilder AddApiServices(this WebApplicationBuilder builder)
     {
         builder.Services.AddControllers(options =>
             {
@@ -35,8 +36,28 @@ public static class DependencyInjection
             
             // This registers media type for all controllers. If you want a per controller - use [Produces] attribute
             // in particular controllers instead
+            formatter.SupportedMediaTypes.Add(CustomMediaTypeNames.Application.JsonV1);
+            formatter.SupportedMediaTypes.Add(CustomMediaTypeNames.Application.JsonV2);
             formatter.SupportedMediaTypes.Add(CustomMediaTypeNames.Application.HateoasJson);
+            formatter.SupportedMediaTypes.Add(CustomMediaTypeNames.Application.HateoasJsonV1);
+            formatter.SupportedMediaTypes.Add(CustomMediaTypeNames.Application.HateoasJsonV2);
         });
+
+        builder.Services
+            .AddApiVersioning(options =>
+            {
+                options.DefaultApiVersion = new ApiVersion(1.0);
+                options.AssumeDefaultVersionWhenUnspecified = true;
+                options.ReportApiVersions = true;
+                options.ApiVersionSelector = new DefaultApiVersionSelector(options);
+
+                options.ApiVersionReader = ApiVersionReader.Combine(
+                    new MediaTypeApiVersionReader(),
+                    new MediaTypeApiVersionReaderBuilder()
+                        .Template(CustomMediaTypeNames.Application.HateoasJsonVersionTemplate)
+                        .Build());
+            })
+            .AddMvc();
         
         builder.Services.AddOpenApi();
         
