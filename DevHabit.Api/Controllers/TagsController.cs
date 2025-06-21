@@ -21,15 +21,25 @@ namespace DevHabit.Api.Controllers;
     CustomMediaTypeNames.Application.JsonV1,
     CustomMediaTypeNames.Application.HateoasJson,
     CustomMediaTypeNames.Application.HateoasJsonV1)]
-public class TagsController(ApplicationDbContext dbContext, LinkService linkService) : ControllerBase
+public class TagsController(ApplicationDbContext dbContext, LinkService linkService, UserContext userContext) 
+    : ControllerBase
 {
     [HttpGet]
-    public async Task<ActionResult<TagsCollectionDto>> GetTags([FromHeader] AcceptHeaderDto acceptHeader)
+    public async Task<ActionResult<TagsCollectionDto>> GetTags([FromHeader] AcceptHeaderDto acceptHeader,
+        CancellationToken cancellationToken)
     {
+        string? userId = await userContext.GetUserIdAsync(cancellationToken);
+
+        if (string.IsNullOrEmpty(userId))
+        {
+            return Unauthorized();
+        }
+
         List<TagDto> tags = await dbContext
             .Tags
+            .Where(t => t.UserId == userId)
             .Select(TagQueries.ProjectToDto())
-            .ToListAsync();
+            .ToListAsync(cancellationToken);
 
         var habitsCollectionDto = new TagsCollectionDto
         {
@@ -45,13 +55,21 @@ public class TagsController(ApplicationDbContext dbContext, LinkService linkServ
     }
     
     [HttpGet("{id}")]
-    public async Task<ActionResult<TagDto>> GetTag(string id, [FromHeader] AcceptHeaderDto acceptHeader)
+    public async Task<ActionResult<TagDto>> GetTag(string id, [FromHeader] AcceptHeaderDto acceptHeader, 
+        CancellationToken cancellationToken)
     {
+        string? userId = await userContext.GetUserIdAsync(cancellationToken);
+
+        if (string.IsNullOrEmpty(userId))
+        {
+            return Unauthorized();
+        }
+        
         TagDto? tag = await dbContext
             .Tags
-            .Where(h => h.Id == id)
+            .Where(h => h.Id == id && h.UserId == userId)
             .Select(TagQueries.ProjectToDto())
-            .FirstOrDefaultAsync();
+            .FirstOrDefaultAsync(cancellationToken);
 
         if (tag is null)
         {
@@ -69,20 +87,28 @@ public class TagsController(ApplicationDbContext dbContext, LinkService linkServ
     [HttpPost]
     public async Task<ActionResult<TagDto>> CreateTag(CreateTagDto createTagDto, 
         [FromHeader] AcceptHeaderDto acceptHeader,
-        IValidator<CreateTagDto> validator)
+        IValidator<CreateTagDto> validator,
+        CancellationToken cancellationToken)
     {
-        await validator.ValidateAndThrowAsync(createTagDto);
+        string? userId = await userContext.GetUserIdAsync(cancellationToken);
 
-        Tag tag = createTagDto.ToEntity();
+        if (string.IsNullOrEmpty(userId))
+        {
+            return Unauthorized();
+        }
+        
+        await validator.ValidateAndThrowAsync(createTagDto, cancellationToken);
 
-        if (await dbContext.Tags.AnyAsync(t => t.Name == tag.Name))
+        Tag tag = createTagDto.ToEntity(userId);
+
+        if (await dbContext.Tags.AnyAsync(t => t.UserId == userId && t.Name == tag.Name, cancellationToken))
         {
             return Problem(detail: $"The tag '{tag.Name}' already exists", statusCode: StatusCodes.Status409Conflict);
         }
 
         dbContext.Tags.Add(tag);
 
-        await dbContext.SaveChangesAsync();
+        await dbContext.SaveChangesAsync(cancellationToken);
 
         TagDto tagDto = tag.ToDto();
 
@@ -95,9 +121,17 @@ public class TagsController(ApplicationDbContext dbContext, LinkService linkServ
     }
 
     [HttpPut("{id}")]
-    public async Task<ActionResult> UpdateTag(string id, UpdateTagDto updateTagDto)
+    public async Task<ActionResult> UpdateTag(string id, UpdateTagDto updateTagDto,
+        CancellationToken cancellationToken)
     {
-        Tag? tag = await dbContext.Tags.FirstOrDefaultAsync(h => h.Id == id);
+        string? userId = await userContext.GetUserIdAsync(cancellationToken);
+
+        if (string.IsNullOrEmpty(userId))
+        {
+            return Unauthorized();
+        }
+
+        Tag? tag = await dbContext.Tags.FirstOrDefaultAsync(h => h.Id == id && h.UserId == userId, cancellationToken);
 
         if (tag is null)
         {
@@ -106,15 +140,22 @@ public class TagsController(ApplicationDbContext dbContext, LinkService linkServ
 
         tag.UpdateFromDto(updateTagDto);
 
-        await dbContext.SaveChangesAsync();
+        await dbContext.SaveChangesAsync(cancellationToken);
 
         return NoContent();
     }
 
     [HttpDelete("{id}")]
-    public async Task<ActionResult> DeleteTag(string id)
+    public async Task<ActionResult> DeleteTag(string id, CancellationToken cancellationToken)
     {
-        Tag? tag = await dbContext.Tags.FirstOrDefaultAsync(h => h.Id == id);
+        string? userId = await userContext.GetUserIdAsync(cancellationToken);
+
+        if (string.IsNullOrEmpty(userId))
+        {
+            return Unauthorized();
+        }
+
+        Tag? tag = await dbContext.Tags.FirstOrDefaultAsync(h => h.Id == id && h.UserId == userId, cancellationToken);
 
         if (tag is null)
         {
@@ -123,7 +164,7 @@ public class TagsController(ApplicationDbContext dbContext, LinkService linkServ
 
         dbContext.Tags.Remove(tag);
 
-        await dbContext.SaveChangesAsync();
+        await dbContext.SaveChangesAsync(cancellationToken);
 
         return NoContent();
     }

@@ -68,7 +68,7 @@ public class AuthController(
         var refreshToken = new RefreshToken
         {
             Id = Guid.CreateVersion7(),
-            UserId = user.Id,
+            UserId = identityUser.Id,
             Token = accessTokens.RefreshToken,
             ExpiresAtUtc = DateTime.UtcNow.AddDays(_jwtAuthOptions.RefreshTokenExpirationDays),
         };
