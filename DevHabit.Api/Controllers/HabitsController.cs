@@ -92,7 +92,7 @@ public sealed class HabitsController(ApplicationDbContext dbContext, LinkService
             paginationResult.Links =
                 CreateLinksForHabits(query, paginationResult.HasNextPage, paginationResult.HasPreviousPage);
         }
-
+        
         return Ok(paginationResult);
     }
 
