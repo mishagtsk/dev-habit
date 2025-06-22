@@ -25,7 +25,7 @@ using OpenTelemetry.Trace;
 
 namespace DevHabit.Api;
 
-public static class DependencyInjection
+internal static class DependencyInjection
 {
     public static WebApplicationBuilder AddApiServices(this WebApplicationBuilder builder)
     {
@@ -158,6 +158,9 @@ public static class DependencyInjection
                 
                 client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/vnd.github+json"));
             });
+        
+        builder.Services.Configure<EncryptionOptions>(builder.Configuration.GetSection("Encryption"));
+        builder.Services.AddTransient<EncryptionService>();
 
         return builder;
     }
