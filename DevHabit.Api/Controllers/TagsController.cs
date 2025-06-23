@@ -126,7 +126,7 @@ public class TagsController(ApplicationDbContext dbContext, LinkService linkServ
     }
 
     [HttpPut("{id}")]
-    public async Task<ActionResult> UpdateTag(string id, UpdateTagDto updateTagDto,
+    public async Task<ActionResult> UpdateTag(string id, UpdateTagDto updateTagDto, InMemoryEtagStore inMemoryEtagStore,
         CancellationToken cancellationToken)
     {
         string? userId = await userContext.GetUserIdAsync(cancellationToken);
@@ -146,6 +146,8 @@ public class TagsController(ApplicationDbContext dbContext, LinkService linkServ
         tag.UpdateFromDto(updateTagDto);
 
         await dbContext.SaveChangesAsync(cancellationToken);
+        
+        inMemoryEtagStore.SetETag(Request.Path.Value!, tag.ToDto());
 
         return NoContent();
     }
