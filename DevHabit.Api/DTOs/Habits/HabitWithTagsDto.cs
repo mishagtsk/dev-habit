@@ -15,6 +15,7 @@ public sealed record HabitWithTagsDto
     public required bool IsArchived { get; init; }
     public required DateOnly? EndDate { get; init; }
     public required MilestoneDto? Milestone { get; init; }
+    public AutomationSource? AutomationSource { get; set; }
     public required DateTime CreatedAtUtc { get; init; }
     public DateTime? UpdatedAtUtc { get; init; }
     public DateTime? LastCompletedAtUtc { get; init; }

@@ -33,6 +33,7 @@ public static class HabitQueries
                     Current = h.Milestone.Current,
                     Target = h.Milestone.Target,
                 },
+            AutomationSource = h.AutomationSource,
             CreatedAtUtc = h.CreatedAtUtc,
             UpdatedAtUtc = h.UpdatedAtUtc,
             LastCompletedAtUtc = h.LastCompletedAtUtc
@@ -67,6 +68,7 @@ public static class HabitQueries
                     Current = h.Milestone.Current,
                     Target = h.Milestone.Target,
                 },
+            AutomationSource = h.AutomationSource,
             CreatedAtUtc = h.CreatedAtUtc,
             UpdatedAtUtc = h.UpdatedAtUtc,
             LastCompletedAtUtc = h.LastCompletedAtUtc,

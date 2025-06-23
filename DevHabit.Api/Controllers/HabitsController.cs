@@ -197,6 +197,15 @@ public sealed class HabitsController(ApplicationDbContext dbContext, LinkService
 
         Habit habit = createHabitDto.ToEntity(userId);
 
+        if (habit.AutomationSource is not null &&
+            await dbContext.Habits.AnyAsync(h => h.UserId == userId && h.AutomationSource == habit.AutomationSource,
+                cancellationToken: cancellationToken))
+        {
+            return Problem(
+                statusCode: StatusCodes.Status400BadRequest,
+                detail: $"Only one habit with this automation source is allowed: '{habit.AutomationSource}'");
+        }
+
         dbContext.Habits.Add(habit);
 
         await dbContext.SaveChangesAsync(cancellationToken);
@@ -228,6 +237,17 @@ public sealed class HabitsController(ApplicationDbContext dbContext, LinkService
         if (habit == null)
         {
             return NotFound();
+        }
+
+        if (habit.AutomationSource is null &&
+            updateHabitDto.AutomationSource is not null &&
+            await dbContext.Habits.AnyAsync(
+                h => h.UserId == userId && h.AutomationSource == updateHabitDto.AutomationSource,
+                cancellationToken: cancellationToken))
+        {
+            return Problem(
+                statusCode: StatusCodes.Status400BadRequest,
+                detail: $"Only one habit with this automation source is allowed: '{habit.AutomationSource}'");
         }
 
         habit.UpdateFromDto(updateHabitDto);

@@ -56,6 +56,7 @@ public static class HabitMappings
                     Current = habit.Milestone.Current,
                     Target = habit.Milestone.Target,
                 },
+            AutomationSource = habit.AutomationSource,
             CreatedAtUtc = habit.CreatedAtUtc,
             UpdatedAtUtc = habit.UpdatedAtUtc,
             LastCompletedAtUtc = habit.LastCompletedAtUtc
@@ -91,6 +92,7 @@ public static class HabitMappings
                     Current = 0,
                     Target = dto.Milestone.Target,
                 },
+            AutomationSource = dto.AutomationSource,
             CreatedAtUtc = DateTime.UtcNow,
         };
         
@@ -103,7 +105,8 @@ public static class HabitMappings
         habit.Description = dto.Description;
         habit.Type = dto.Type;
         habit.EndDate = dto.EndDate;
-
+        habit.AutomationSource = dto.AutomationSource;
+        
         habit.Frequency = new Frequency
         {
             Type = dto.Frequency.Type,
