@@ -41,17 +41,21 @@ public class TagsController(ApplicationDbContext dbContext, LinkService linkServ
             .Select(TagQueries.ProjectToDto())
             .ToListAsync(cancellationToken);
 
-        var habitsCollectionDto = new TagsCollectionDto
+        var tagsCollectionDto = new TagsCollectionDto
         {
             Items = tags
         };
         
         if (acceptHeader.IncludeLinks)
         {
-            habitsCollectionDto.Links = CreateLinksForTags();
+            tagsCollectionDto.Links = CreateLinksForTags(tags.Count);
+            foreach (TagDto tagDto in tagsCollectionDto.Items)
+            {
+                tagDto.Links = CreateLinksForTag(tagDto.Id);
+            }
         }
 
-        return Ok(habitsCollectionDto);
+        return Ok(tagsCollectionDto);
     }
     
     [HttpGet("{id}")]
@@ -169,13 +173,18 @@ public class TagsController(ApplicationDbContext dbContext, LinkService linkServ
         return NoContent();
     }
     
-    private List<LinkDto> CreateLinksForTags()
+    private List<LinkDto> CreateLinksForTags(int tagsCount)
     {
         List<LinkDto> links =
         [
             linkService.Create(nameof(GetTags), "self", HttpMethods.Get),
-            linkService.Create(nameof(CreateTag), "create", HttpMethods.Post)
         ];
+
+        if (tagsCount < 5)
+        {
+            
+            links.Add(linkService.Create(nameof(CreateTag), "create", HttpMethods.Post));
+        }
 
         return links;
     }
