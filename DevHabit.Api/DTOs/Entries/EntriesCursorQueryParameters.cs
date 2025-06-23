@@ -3,15 +3,14 @@ using DevHabit.Api.Entities;
 
 namespace DevHabit.Api.DTOs.Entries;
 
-public record EntriesQueryParameters : AcceptHeaderDto
+public record EntriesCursorQueryParameters : AcceptHeaderDto
 {
-    public string? Sort { get; init; }
+    public string? Cursor { get; init; }
     public string? Fields { get; init; }
     public string? HabitId { get; init; }
     public DateOnly? FromDate { get; init; }
     public DateOnly? ToDate { get; init; }
     public EntrySource? Source { get; init; }
     public bool? IsArchived { get; init; }
-    public int Page { get; init; } = 1;
-    public int PageSize { get; init; } = 10;
+    public int Limit { get; init; } = 10;
 }
