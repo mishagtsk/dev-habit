@@ -18,7 +18,7 @@ namespace DevHabit.Api.Controllers;
     CustomMediaTypeNames.Application.HateoasJsonV1)]
 public class GitHubController(
     GitHubAccessTokenService gitHubAccessTokenService,
-    GitHubService gitHubService,
+    RefitGitHubService gitHubService,
     UserContext userContext,
     LinkService linkService) : ControllerBase
 {
