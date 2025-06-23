@@ -13,6 +13,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace DevHabit.Api.Controllers;
 
+[ResponseCache(Duration = 120)]
 [Authorize(Roles = Roles.Member)]
 [ApiController] 
 [Route("[controller]")]

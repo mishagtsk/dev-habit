@@ -70,6 +70,8 @@ internal static class DependencyInjection
         
         builder.Services.AddOpenApi();
         
+        builder.Services.AddResponseCaching();
+        
         return builder;
     }
 
@@ -166,6 +168,8 @@ internal static class DependencyInjection
         
         builder.Services.Configure<EncryptionOptions>(builder.Configuration.GetSection("Encryption"));
         builder.Services.AddTransient<EncryptionService>();
+
+        builder.Services.AddSingleton<InMemoryEtagStore>();
 
         return builder;
     }
