@@ -67,7 +67,7 @@ public static class HabitMappings
     {
         var habit = new Habit
         {
-            Id = $"h_{Guid.CreateVersion7()}",
+            Id = Habit.NewId(),
             UserId = userId,
             Name = dto.Name,
             Description = dto.Description,

@@ -20,7 +20,7 @@ public static class TagMappings
     {
         Tag habit = new()
         {
-            Id = $"t_{Guid.CreateVersion7()}",
+            Id = Tag.NewId(),
             UserId = userId,
             Name = dto.Name,
             Description = dto.Description,

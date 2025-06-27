@@ -57,7 +57,7 @@ public sealed class DataShapingService
 
     public bool Validate<T>(string? fields)
     {
-        if (string.IsNullOrEmpty(fields))
+        if (string.IsNullOrWhiteSpace(fields))
         {
             return true;
         }

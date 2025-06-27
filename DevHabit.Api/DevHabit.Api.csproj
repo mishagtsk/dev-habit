@@ -9,6 +9,7 @@
         <PackageReference Include="Asp.Versioning.Mvc" />
         <PackageReference Include="CsvHelper" />
         <PackageReference Include="EFCore.NamingConventions" />
+        <PackageReference Include="FluentValidation" />
         <PackageReference Include="FluentValidation.DependencyInjectionExtensions" />
         <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" />
         <PackageReference Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" />
@@ -32,6 +33,10 @@
         <PackageReference Include="Refit.HttpClientFactory" />
         <PackageReference Include="Refit.Newtonsoft.Json" />
         <PackageReference Include="System.Linq.Dynamic.Core" />
+    </ItemGroup>
+    
+    <ItemGroup>
+        <InternalsVisibleTo Include="DevHabit.UnitTests" />
     </ItemGroup>
 
     <ItemGroup>

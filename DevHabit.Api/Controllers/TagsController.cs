@@ -127,8 +127,10 @@ public class TagsController(ApplicationDbContext dbContext, LinkService linkServ
 
     [HttpPut("{id}")]
     public async Task<ActionResult> UpdateTag(string id, UpdateTagDto updateTagDto, InMemoryEtagStore inMemoryEtagStore,
-        CancellationToken cancellationToken)
+        IValidator<UpdateTagDto> validator, CancellationToken cancellationToken)
     {
+        await validator.ValidateAndThrowAsync(updateTagDto, cancellationToken);
+        
         string? userId = await userContext.GetUserIdAsync(cancellationToken);
 
         if (string.IsNullOrEmpty(userId))

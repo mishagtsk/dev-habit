@@ -4,6 +4,7 @@ using DevHabit.Api.DTOs.Common;
 using DevHabit.Api.DTOs.Users;
 using DevHabit.Api.Entities;
 using DevHabit.Api.Services;
+using FluentValidation;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -75,8 +76,11 @@ public sealed class UsersController(ApplicationDbContext dbContext, UserContext 
     }
 
     [HttpPut("me/profile")]
-    public async Task<IActionResult> UpdateProfile(UpdateUserProfileDto dto, CancellationToken cancellationToken)
+    public async Task<IActionResult> UpdateProfile(UpdateUserProfileDto dto, 
+        IValidator<UpdateUserProfileDto> validator, CancellationToken cancellationToken)
     {
+        await validator.ValidateAsync(dto, cancellationToken);
+        
         string? userId = await userContext.GetUserIdAsync(cancellationToken);
 
         if (string.IsNullOrEmpty(userId))

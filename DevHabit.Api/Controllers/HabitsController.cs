@@ -222,8 +222,11 @@ public sealed class HabitsController(ApplicationDbContext dbContext, LinkService
 
     [HttpPut("{id}")]
     public async Task<ActionResult> UpdateHabit(string id, UpdateHabitDto updateHabitDto,
+        IValidator<UpdateHabitDto> validator,
         CancellationToken cancellationToken)
     {
+        await validator.ValidateAndThrowAsync(updateHabitDto, cancellationToken);
+        
         string? userId = await userContext.GetUserIdAsync(cancellationToken);
 
         if (string.IsNullOrEmpty(userId))

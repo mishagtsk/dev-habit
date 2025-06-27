@@ -3,6 +3,7 @@ using DevHabit.Api.DTOs.Common;
 using DevHabit.Api.DTOs.GitHub;
 using DevHabit.Api.Entities;
 using DevHabit.Api.Services;
+using FluentValidation;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -24,8 +25,11 @@ public class GitHubController(
 {
     [HttpPut("personal-access-token")]
     public async Task<IActionResult> StoreAccessToken(StoreGitHubAccessTokenDto storeAccessTokenDto,
+        IValidator<StoreGitHubAccessTokenDto> validator,
         CancellationToken cancellationToken = default)
     {
+        await validator.ValidateAndThrowAsync(storeAccessTokenDto, cancellationToken);
+        
         string? userId = await userContext.GetUserIdAsync(cancellationToken);
 
         if (string.IsNullOrEmpty(userId))

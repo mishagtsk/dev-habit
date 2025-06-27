@@ -23,7 +23,7 @@ public sealed class GitHubAccessTokenService(ApplicationDbContext dbContext, Enc
         {
             dbContext.GitHubAccessTokens.Add(new GitHubAccessToken
             {
-                Id = $"gh_{Guid.CreateVersion7()}",
+                Id = GitHubAccessToken.NewId(),
                 UserId = userId,
                 Token = encryptedToken,
                 CreatedAtUtc = DateTime.UtcNow,
