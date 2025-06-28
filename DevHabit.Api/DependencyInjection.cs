@@ -168,7 +168,7 @@ internal static class DependencyInjection
             .AddHttpClient("github")
             .ConfigureHttpClient(client =>
             {
-                client.BaseAddress = new Uri("https://api.github.com");
+                client.BaseAddress = new Uri(builder.Configuration.GetSection("GitHub:BaseUrl").Get<string>()!);
                 
                 client.DefaultRequestHeaders.UserAgent.Add(new ProductInfoHeaderValue("DevHabit", "1.0"));
                 
@@ -180,7 +180,7 @@ internal static class DependencyInjection
             {
                 ContentSerializer = new NewtonsoftJsonContentSerializer()
             })
-            .ConfigureHttpClient(client => client.BaseAddress = new Uri("https://api.github.com"));
+            .ConfigureHttpClient(client => client.BaseAddress = new Uri(builder.Configuration.GetSection("GitHub:BaseUrl").Get<string>()!));
         
         // This can be added as an additional handler to do delay for each api call to trigger resiliency pipeline
             //.AddHttpMessageHandler<DelayHandler>();

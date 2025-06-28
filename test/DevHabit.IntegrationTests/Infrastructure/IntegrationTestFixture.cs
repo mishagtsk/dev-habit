@@ -4,6 +4,7 @@ using DevHabit.Api.Database;
 using DevHabit.Api.DTOs.Auth;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
+using WireMock.Server;
 
 namespace DevHabit.IntegrationTests.Infrastructure;
 
@@ -11,7 +12,9 @@ namespace DevHabit.IntegrationTests.Infrastructure;
 public abstract class IntegrationTestFixture(DevHabitWebAppFactory factory) : IClassFixture<DevHabitWebAppFactory>
 {
     private HttpClient? authorizedCliet;
-    public HttpClient CreateClient() => factory.CreateClient();
+    protected HttpClient CreateClient() => factory.CreateClient();
+    
+    protected WireMockServer WireMockServer => factory.GetWireMockServer();
 
     public async Task<HttpClient> CreateAuthenticatedClientAsync(string email = "test@test.com",
         string password = "Test123!")

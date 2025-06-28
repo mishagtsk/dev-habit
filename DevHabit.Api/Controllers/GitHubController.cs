@@ -72,7 +72,7 @@ public class GitHubController(
 
         if (string.IsNullOrEmpty(accessToken))
         {
-            return NotFound();
+            return Unauthorized();
         }
 
         GitHubUserProfileDto? userProfile =
@@ -93,6 +93,44 @@ public class GitHubController(
             ];
         }
 
+        return Ok(userProfile);
+    }
+
+    [HttpGet("events")]
+    public async Task<ActionResult<IReadOnlyList<GitHubEventDto>>> GetUserEvents(
+        CancellationToken cancellationToken = default)
+    {
+        string? userId = await userContext.GetUserIdAsync(CancellationToken.None);
+
+        if (string.IsNullOrEmpty(userId))
+        {
+            return Unauthorized();
+        }
+
+        string? accessToken = await gitHubAccessTokenService.GetAsync(userId, cancellationToken);
+
+        if (string.IsNullOrEmpty(accessToken))
+        {
+            return Unauthorized();
+        }
+
+        GitHubUserProfileDto? userProfile =
+            await gitHubService.GetUserProfileAsync(accessToken, CancellationToken.None);
+
+        if (userProfile == null)
+        {
+            return NotFound();
+        }
+
+        IReadOnlyList<GitHubEventDto>? events =
+            await gitHubService.GetUserEventsAsync(userProfile.Login, accessToken,
+                cancellationToken: cancellationToken);
+        
+        if (events == null)
+        {
+            return NotFound();
+        }
+        
         return Ok(userProfile);
     }
 }
