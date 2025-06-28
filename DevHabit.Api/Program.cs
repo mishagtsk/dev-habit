@@ -1,3 +1,4 @@
+using System.Diagnostics.CodeAnalysis;
 using DevHabit.Api;
 using DevHabit.Api.Extensions;
 using DevHabit.Api.Middleware;
@@ -44,3 +45,6 @@ app.UseMiddleware<ETagMiddleware>();
 app.MapControllers();
 
 await app.RunAsync();
+
+[ExcludeFromCodeCoverage]
+public partial class Program;
