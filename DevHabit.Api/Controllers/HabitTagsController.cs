@@ -57,7 +57,7 @@ public class HabitTagsController(ApplicationDbContext dbContext) : ControllerBas
         
         await dbContext.SaveChangesAsync();
 
-        return Ok();
+        return NoContent();
     }
     
     [HttpDelete("{tagId}")]

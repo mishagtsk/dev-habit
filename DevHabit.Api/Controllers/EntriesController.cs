@@ -209,7 +209,7 @@ public class EntriesController(ApplicationDbContext dbContext, LinkService linkS
     }
 
     [HttpPost]
-    [IdempotentRequest]
+    //[IdempotentRequest]
     public async Task<ActionResult<EntryDto>> CreateEntry(
         CreateEntryDto createEntryDto,
         [FromHeader] AcceptHeaderDto acceptHeader,

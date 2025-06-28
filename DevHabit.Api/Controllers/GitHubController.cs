@@ -24,20 +24,19 @@ public class GitHubController(
     LinkService linkService) : ControllerBase
 {
     [HttpPut("personal-access-token")]
-    public async Task<IActionResult> StoreAccessToken(StoreGitHubAccessTokenDto storeAccessTokenDto,
-        IValidator<StoreGitHubAccessTokenDto> validator,
-        CancellationToken cancellationToken = default)
+    public async Task<IActionResult> StoreAccessToken(
+        StoreGitHubAccessTokenDto storeGitHubAccessTokenDto,
+        IValidator<StoreGitHubAccessTokenDto> validator)
     {
-        await validator.ValidateAndThrowAsync(storeAccessTokenDto, cancellationToken);
-        
-        string? userId = await userContext.GetUserIdAsync(cancellationToken);
+        await validator.ValidateAndThrowAsync(storeGitHubAccessTokenDto);
 
-        if (string.IsNullOrEmpty(userId))
+        string? userId = await userContext.GetUserIdAsync();
+        if (string.IsNullOrWhiteSpace(userId))
         {
             return Unauthorized();
         }
-        
-        await gitHubAccessTokenService.StoreAsync(userId, storeAccessTokenDto, cancellationToken);
+
+        await gitHubAccessTokenService.StoreAsync(userId, storeGitHubAccessTokenDto);
 
         return NoContent();
     }
@@ -97,40 +96,36 @@ public class GitHubController(
     }
 
     [HttpGet("events")]
-    public async Task<ActionResult<IReadOnlyList<GitHubEventDto>>> GetUserEvents(
-        CancellationToken cancellationToken = default)
+    public async Task<ActionResult<IReadOnlyList<GitHubEventDto>>> GetUserEvents()
     {
-        string? userId = await userContext.GetUserIdAsync(CancellationToken.None);
-
-        if (string.IsNullOrEmpty(userId))
+        string? userId = await userContext.GetUserIdAsync();
+        if (string.IsNullOrWhiteSpace(userId))
         {
             return Unauthorized();
         }
 
-        string? accessToken = await gitHubAccessTokenService.GetAsync(userId, cancellationToken);
-
-        if (string.IsNullOrEmpty(accessToken))
+        string? accessToken = await gitHubAccessTokenService.GetAsync(userId);
+        if (accessToken is null)
         {
             return Unauthorized();
         }
 
-        GitHubUserProfileDto? userProfile =
-            await gitHubService.GetUserProfileAsync(accessToken, CancellationToken.None);
+        GitHubUserProfileDto? profile = await gitHubService.GetUserProfileAsync(accessToken);
 
-        if (userProfile == null)
+        if (profile is null)
         {
             return NotFound();
         }
 
-        IReadOnlyList<GitHubEventDto>? events =
-            await gitHubService.GetUserEventsAsync(userProfile.Login, accessToken,
-                cancellationToken: cancellationToken);
-        
-        if (events == null)
+        IReadOnlyList<GitHubEventDto>? events = await gitHubService.GetUserEventsAsync(
+            profile.Login,
+            accessToken);
+
+        if (events is null)
         {
             return NotFound();
         }
-        
-        return Ok(userProfile);
+
+        return Ok(events);
     }
 }

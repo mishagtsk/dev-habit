@@ -4,12 +4,14 @@ using DevHabit.Api.DTOs.Common;
 using DevHabit.Api.DTOs.Tags;
 using DevHabit.Api.Entities;
 using DevHabit.Api.Services;
+using DevHabit.Api.Settings;
 using FluentValidation;
 using FluentValidation.Results;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Infrastructure;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
 
 namespace DevHabit.Api.Controllers;
 
@@ -22,7 +24,8 @@ namespace DevHabit.Api.Controllers;
     CustomMediaTypeNames.Application.JsonV1,
     CustomMediaTypeNames.Application.HateoasJson,
     CustomMediaTypeNames.Application.HateoasJsonV1)]
-public class TagsController(ApplicationDbContext dbContext, LinkService linkService, UserContext userContext) 
+public class TagsController(ApplicationDbContext dbContext, LinkService linkService, UserContext userContext,
+    IOptions<TagsOptions> options) 
     : ControllerBase
 {
     [HttpGet]
@@ -49,7 +52,7 @@ public class TagsController(ApplicationDbContext dbContext, LinkService linkServ
         
         if (acceptHeader.IncludeLinks)
         {
-            tagsCollectionDto.Links = CreateLinksForTags(tags.Count);
+            tagsCollectionDto.Links = CreateLinksForTags(tags.Count, options.Value.MaxAllowedTags);
             foreach (TagDto tagDto in tagsCollectionDto.Items)
             {
                 tagDto.Links = CreateLinksForTag(tagDto.Id);
@@ -104,6 +107,13 @@ public class TagsController(ApplicationDbContext dbContext, LinkService linkServ
         
         await validator.ValidateAndThrowAsync(createTagDto, cancellationToken);
 
+        if (await dbContext.Tags.CountAsync(t => t.UserId == userId, cancellationToken) >= options.Value.MaxAllowedTags)
+        {
+            return Problem(
+                detail: "Reached the maximum number of allowed tags",
+                statusCode: StatusCodes.Status400BadRequest);
+        }
+        
         Tag tag = createTagDto.ToEntity(userId);
 
         if (await dbContext.Tags.AnyAsync(t => t.UserId == userId && t.Name == tag.Name, cancellationToken))
@@ -178,14 +188,14 @@ public class TagsController(ApplicationDbContext dbContext, LinkService linkServ
         return NoContent();
     }
     
-    private List<LinkDto> CreateLinksForTags(int tagsCount)
+    private List<LinkDto> CreateLinksForTags(int tagsCount, int maxAllowedTags)
     {
         List<LinkDto> links =
         [
             linkService.Create(nameof(GetTags), "self", HttpMethods.Get),
         ];
 
-        if (tagsCount < 5)
+        if (tagsCount < maxAllowedTags)
         {
             
             links.Add(linkService.Create(nameof(CreateTag), "create", HttpMethods.Post));
