@@ -26,10 +26,22 @@ namespace DevHabit.Api.Controllers;
     CustomMediaTypeNames.Application.HateoasJson,
     CustomMediaTypeNames.Application.HateoasJsonV1,
     CustomMediaTypeNames.Application.HateoasJsonV2)]
+[ProducesResponseType(StatusCodes.Status401Unauthorized)]
+[ProducesResponseType(StatusCodes.Status403Forbidden)]
 public sealed class HabitsController(ApplicationDbContext dbContext, LinkService linkService, UserContext userContext)
     : ControllerBase
 {
+    /// <summary>
+    /// Retrieves a paginated list of habits
+    /// </summary>
+    /// <param name="query">Query parameters for filtering and pagination</param>
+    /// <param name="sortMappingProvider">Provider for sorting mappings</param>
+    /// <param name="dataShapingService">Service for data shaping</param>
+    /// <param name="cancellationToken"></param>
+    /// <returns>Paginated list of habits</returns>
     [HttpGet]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> GetHabits([FromQuery] HabitsQueryParameters query,
         SortMappingProvider sortMappingProvider, DataShapingService dataShapingService,
         CancellationToken cancellationToken)
@@ -96,7 +108,17 @@ public sealed class HabitsController(ApplicationDbContext dbContext, LinkService
         return Ok(paginationResult);
     }
 
+    /// <summary>
+    /// Retrieves a specific habit by ID
+    /// </summary>
+    /// <param name="id">The habit ID</param>
+    /// <param name="query">Query parameters for data shaping</param>
+    /// <param name="dataShapingService">Service for data shaping</param>
+    /// <param name="cancellationToken"></param>
+    /// <returns>The requested habit</returns>
     [HttpGet("{id}")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
     [MapToApiVersion(1.0)]
     public async Task<IActionResult> GetHabit(string id,
         [FromQuery] HabitQueryParameters query,
@@ -138,9 +160,19 @@ public sealed class HabitsController(ApplicationDbContext dbContext, LinkService
         return Ok(shapedHabitDto);
     }
 
+    /// <summary>
+    /// Retrieves a specific habit by ID with version 2 of the API
+    /// </summary>
+    /// <param name="id">The habit ID</param>
+    /// <param name="query">Query parameters for data shaping</param>
+    /// <param name="dataShapingService">Service for data shaping</param>
+    /// <param name="cancellationToken"></param>
+    /// <returns>The requested habit</returns>
     [HttpGet("{id}")]
     [ApiVersion(2.0)]
-    public async Task<IActionResult> GetHabiV2(string id,
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> GetHabitV2(string id,
         [FromQuery] HabitQueryParameters query,
         DataShapingService dataShapingService,
         CancellationToken cancellationToken)
@@ -180,7 +212,17 @@ public sealed class HabitsController(ApplicationDbContext dbContext, LinkService
         return Ok(shapedHabitDto);
     }
 
+    /// <summary>
+    /// Creates a new habit
+    /// </summary>
+    /// <param name="createHabitDto">The habit creation details</param>
+    /// <param name="acceptHeader">Controls HATEOAS link generation</param>
+    /// <param name="validator">Validator for the creation request</param>
+    /// <param name="cancellationToken"></param>
+    /// <returns>The created habit</returns>
     [HttpPost]
+    [ProducesResponseType<HabitDto>(StatusCodes.Status201Created)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
     public async Task<ActionResult<HabitDto>> CreateHabit(CreateHabitDto createHabitDto,
         [FromHeader] AcceptHeaderDto acceptHeader,
         IValidator<CreateHabitDto> validator,
@@ -220,7 +262,18 @@ public sealed class HabitsController(ApplicationDbContext dbContext, LinkService
         return CreatedAtAction(nameof(GetHabit), new { id = habit.Id }, habitDto);
     }
 
+    /// <summary>
+    /// Updates an existing habit
+    /// </summary>
+    /// <param name="id">The habit ID</param>
+    /// <param name="updateHabitDto">The habit update details</param>
+    /// <param name="validator"></param>
+    /// <param name="cancellationToken"></param>
+    /// <returns>No content on success</returns>
     [HttpPut("{id}")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<ActionResult> UpdateHabit(string id, UpdateHabitDto updateHabitDto,
         IValidator<UpdateHabitDto> validator,
         CancellationToken cancellationToken)
@@ -260,7 +313,17 @@ public sealed class HabitsController(ApplicationDbContext dbContext, LinkService
         return NoContent();
     }
 
+    /// <summary>
+    /// Partially updates an existing habit using JSON Patch
+    /// </summary>
+    /// <param name="id">The habit ID</param>
+    /// <param name="patchDocument">The JSON Patch document</param>
+    /// <param name="cancellationToken"></param>
+    /// <returns>No content on success</returns>
     [HttpPatch("{id}")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<ActionResult> PatchHabit(string id, JsonPatchDocument<HabitDto> patchDocument,
         CancellationToken cancellationToken)
     {
@@ -297,7 +360,15 @@ public sealed class HabitsController(ApplicationDbContext dbContext, LinkService
         return NoContent();
     }
 
+    /// <summary>
+    /// Deletes a habit
+    /// </summary>
+    /// <param name="id">The habit ID</param>
+    /// <param name="cancellationToken"></param>
+    /// <returns>No content on success</returns>
     [HttpDelete("{id}")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<ActionResult> DeleteHabit(string id, CancellationToken cancellationToken)
     {
         string? userId = await userContext.GetUserIdAsync(cancellationToken);

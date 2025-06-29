@@ -1,4 +1,5 @@
 using System.Net.Http.Headers;
+using System.Reflection;
 using System.Text;
 using System.Threading.RateLimiting;
 using Asp.Versioning;
@@ -81,6 +82,10 @@ internal static class DependencyInjection
         builder.Services.AddSwaggerGen(options =>
         {
             options.ResolveConflictingActions(descriptions => descriptions.First());
+
+            string xmlFile = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";
+            string xmlPath = Path.Combine(AppContext.BaseDirectory, xmlFile);
+            options.IncludeXmlComments(xmlPath);
         });
         
         builder.Services.AddResponseCaching();
