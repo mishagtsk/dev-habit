@@ -71,7 +71,7 @@ public class GitHubController(
 
         if (string.IsNullOrEmpty(accessToken))
         {
-            return Unauthorized();
+            return NotFound();
         }
 
         GitHubUserProfileDto? userProfile =

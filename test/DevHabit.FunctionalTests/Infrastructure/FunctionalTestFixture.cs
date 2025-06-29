@@ -8,15 +8,16 @@ using Microsoft.Extensions.DependencyInjection;
 using Npgsql;
 using WireMock.Server;
 
-namespace DevHabit.IntegrationTests.Infrastructure;
+namespace DevHabit.FunctionalTests.Infrastructure;
 
-//[Collection(nameof(IntegrationTestCollection))]
-public abstract class IntegrationTestFixture(DevHabitWebAppFactory factory) : IClassFixture<DevHabitWebAppFactory>
+//[Collection(nameof(FunctionalTestCollection))]
+public abstract class FunctionalTestFixture(DevHabitWebAppFactory factory) : IClassFixture<DevHabitWebAppFactory>
 {
     private HttpClient? _authorizedClient;
-    protected HttpClient CreateClient() => factory.CreateClient();
-    
-    protected WireMockServer WireMockServer => factory.GetWireMockServer();
+
+    public WireMockServer WireMockServer => factory.GetWireMockServer();
+
+    public HttpClient CreateClient() => factory.CreateClient();
 
     protected async Task CleanupDatabaseAsync()
     {
@@ -49,7 +50,7 @@ public abstract class IntegrationTestFixture(DevHabitWebAppFactory factory) : IC
 
         await command.ExecuteNonQueryAsync();
     }
-    
+
     public async Task<HttpClient> CreateAuthenticatedClientAsync(
         string email = "test@test.com",
         string password = "Test123!",
