@@ -1,3 +1,4 @@
+using System.Net.Mime;
 using DevHabit.Api.Database;
 using DevHabit.Api.DTOs.Auth;
 using DevHabit.Api.DTOs.Users;
@@ -17,6 +18,11 @@ namespace DevHabit.Api.Controllers;
 [ApiController]
 [Route("auth")]
 [AllowAnonymous]
+[Produces(
+    MediaTypeNames.Application.Json,
+    CustomMediaTypeNames.Application.JsonV1,
+    CustomMediaTypeNames.Application.HateoasJson,
+    CustomMediaTypeNames.Application.HateoasJsonV1)]
 public class AuthController(
     UserManager<IdentityUser> userManager,
     ApplicationDbContext applicationDbContext,
