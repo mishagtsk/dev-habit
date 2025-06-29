@@ -19,7 +19,7 @@ namespace DevHabit.Api.Controllers;
 [EnableRateLimiting("default")]
 [Authorize(Roles = Roles.Member)]
 [ApiController]
-[Route("[controller]")]
+[Route("entries")]
 [ApiVersion(1.0)]
 [Produces(
     MediaTypeNames.Application.Json,

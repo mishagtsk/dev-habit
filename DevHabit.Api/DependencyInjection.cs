@@ -73,7 +73,15 @@ internal static class DependencyInjection
             })
             .AddMvc();
         
+        /* This is open api + swagger specification
         builder.Services.AddOpenApi();
+        */
+        
+        // This is pure swagger
+        builder.Services.AddSwaggerGen(options =>
+        {
+            options.ResolveConflictingActions(descriptions => descriptions.First());
+        });
         
         builder.Services.AddResponseCaching();
         

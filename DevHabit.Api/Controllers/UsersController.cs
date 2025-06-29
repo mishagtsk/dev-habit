@@ -13,7 +13,7 @@ namespace DevHabit.Api.Controllers;
 
 [Authorize(Roles = Roles.Member)]
 [ApiController] 
-[Route("[controller]")]
+[Route("users")]
 public sealed class UsersController(ApplicationDbContext dbContext, UserContext userContext, 
     LinkService linkService) : ControllerBase
 {

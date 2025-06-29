@@ -22,7 +22,18 @@ WebApplication app = builder.Build();
 
 if (app.Environment.IsDevelopment())
 {
+    /*This is openAPi + swagger specification
     app.MapOpenApi();
+    
+    app.UseSwaggerUI(options =>
+    {
+        options.SwaggerEndpoint("/openapi/v1.json", "v1");
+    });
+    */
+    
+    // This is pure swagger
+    app.UseSwagger();
+    app.UseSwaggerUI();
 
     await app.ApplyMigrationsAsync();
 

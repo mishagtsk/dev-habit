@@ -17,7 +17,7 @@ namespace DevHabit.Api.Controllers;
 
 [Authorize(Roles = Roles.Member)]
 [ApiController]
-[Route("[controller]")]
+[Route("habits")]
 [ApiVersion(1.0)]
 [Produces(
     MediaTypeNames.Application.Json,

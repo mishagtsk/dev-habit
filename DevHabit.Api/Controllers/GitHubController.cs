@@ -11,7 +11,7 @@ namespace DevHabit.Api.Controllers;
 
 [Authorize(Roles = Roles.Member)]
 [ApiController]
-[Route("[controller]")]
+[Route("github")]
 [Produces(
     MediaTypeNames.Application.Json,
     CustomMediaTypeNames.Application.JsonV1,

@@ -15,7 +15,7 @@ using Microsoft.Extensions.Options;
 namespace DevHabit.Api.Controllers;
 
 [ApiController]
-[Route("[controller]")]
+[Route("auth")]
 [AllowAnonymous]
 public class AuthController(
     UserManager<IdentityUser> userManager,
