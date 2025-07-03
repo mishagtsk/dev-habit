@@ -2,6 +2,7 @@ using System.Diagnostics.CodeAnalysis;
 using DevHabit.Api;
 using DevHabit.Api.Extensions;
 using DevHabit.Api.Middleware;
+using Scalar.AspNetCore;
 using CorsOptions = DevHabit.Api.Settings.CorsOptions;
 
 WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
@@ -34,6 +35,11 @@ if (app.Environment.IsDevelopment())
     // This is pure swagger
     app.UseSwagger();
     app.UseSwaggerUI();
+
+    app.MapScalarApiReference(options =>
+    {
+        options.WithOpenApiRoutePattern("/swagger/1.0/swagger.json");
+    });
 
     await app.ApplyMigrationsAsync();
 
