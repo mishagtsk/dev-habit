@@ -3,6 +3,7 @@ using System.Reflection;
 using System.Text;
 using System.Threading.RateLimiting;
 using Asp.Versioning;
+using Azure.Monitor.OpenTelemetry.AspNetCore;
 using DevHabit.Api.Database;
 using DevHabit.Api.DTOs.Entries;
 using DevHabit.Api.DTOs.Habits;
@@ -135,14 +136,23 @@ internal static class DependencyInjection
             .WithMetrics(metrics => metrics
                 .AddHttpClientInstrumentation()
                 .AddAspNetCoreInstrumentation()
-                .AddRuntimeInstrumentation())
-            .UseOtlpExporter();
+                .AddRuntimeInstrumentation());
+            //.UseOtlpExporter(); This is to export otel to seek or aspire dashboard
 
         builder.Logging.AddOpenTelemetry(options =>
         {
             options.IncludeScopes = true;
             options.IncludeFormattedMessage = true;
         });
+
+        if (builder.Environment.IsDevelopment())
+        {
+            builder.Services.AddOpenTelemetry().UseOtlpExporter();  //This is to export otel to seek or aspire dashboard
+        }
+        else
+        {
+            builder.Services.AddOpenTelemetry().UseAzureMonitor();
+        }
         
         return builder;
     }
