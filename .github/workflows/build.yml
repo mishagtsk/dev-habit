@@ -5,8 +5,6 @@ on:
   push: 
     branches:
       - main
-    paths:
-      - "DevHabit/**"
         
 env:
   AZURE_WEBAPP_NAME: myko-devhabit-api  
