@@ -1,20 +1,28 @@
-name: Build
+name: API CI
 
 on:
   workflow_dispatch:
   push: 
     branches:
       - main
+    paths:
+      - "DevHabit/**"
         
 env:
+  AZURE_WEBAPP_NAME: myko-devhabit-api  
+  AZURE_WEBAPP_PACKAGE_PATH: "./DevHabit.Api/publish"
   DOTNET_VERSION: "9.x"
   SOLUTION_PATH: "DevHabit.sln"
+  API_PROJECT_PATH: "DevHabit.Api"  
+  PUBLISH_DIR: "./publish"
+  CONNECTIONSTRINGS__DATABASE: "<Replaced by Bundle>"
+  
   
 jobs: 
-  build:
-    name: Build
+  build-and-test:
+    name: Build and Test
     runs-on: ubuntu-latest
-    
+        
     steps:
       - uses: actions/checkout@v4
         
@@ -33,4 +41,10 @@ jobs:
         run: dotnet test ${{ env.SOLUTION_PATH }} --configuration Release --no-restore --no-build --verbosity normal
         
       - name: Publish
-        run: dotnet publish ${{ env.SOLUTION_PATH }} --configuration Release --no-restore --no-build
+        run: dotnet publish ${{ env.API_PROJECT_PATH }} --configuration Release --no-restore --no-build --property:PublishDir=${{ env.PUBLISH_DIR }}
+
+      - name: Publish Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: webapp #artifact name
+          path: ${{ env.AZURE_WEBAPP_PACKAGE_PATH }}
