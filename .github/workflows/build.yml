@@ -46,3 +46,49 @@ jobs:
         with:
           name: webapp #artifact name
           path: ${{ env.AZURE_WEBAPP_PACKAGE_PATH }}
+    
+  apply-migrations:
+    name: Apply Database Migrations
+    needs: build-and-test
+    runs-on: ubuntu-latest
+    
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup .Net
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+      
+      - name: Install EF Core CLI
+        run: dotnet tool install --global dotnet-ef
+        
+      - name: Create migration bundle
+        run: |
+          dotnet ef migration bundle --startup-project ${{ env.API_PROJECT_PATH}} --project ${{ env.API_PROJECT_PATH }} --context ApplicationDbContext --output app-bundle.exe
+          dotnet ef migration bundle --startup-project ${{ env.API_PROJECT_PATH}} --project ${{ env.API_PROJECT_PATH }} --context ApplicationIdentityDbContext --output identity-bundle.exe
+          
+      - name: Apply app migration
+        run: ./app-bundle.exe --connection "${{ secrets.DATABASE_CONNECTION_STRING }}"
+
+      - name: Apply identity migration
+        run: ./identity-bundle.exe --connection "${{ secrets.DATABASE_CONNECTION_STRING }}"
+
+  deploy:
+    name: Deploy to Azure
+    runs-on: ubuntu-latest
+    needs: [build-and-test] # array of dependent jobs
+
+    steps:
+      - name: Download atrifact from build job
+        uses: actions/download-artifact@v4
+        with:
+          name: webapp
+          path: ${{ env.AZURE_WEBAPP_PACKAGE_PATH }}
+
+      - name: Deploy
+        uses: azure/webapps-deploy@v2
+        with:
+          app-name: ${{ env.AZURE_WEBAPP_NAME}}
+          publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}
+          package: ${{ env.AZURE_WEBAPP_PACKAGE_PATH }}
