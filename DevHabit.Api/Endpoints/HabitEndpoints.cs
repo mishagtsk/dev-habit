@@ -37,6 +37,22 @@ public static class HabitEndpoints
             .Produces(StatusCodes.Status403Forbidden)
             .WithOpenApi();
         
+        group.MapGet("/v1/{id}", GetHabit)
+            .WithName(nameof(GetHabit))
+            .Produces<HabitWithTagsDto>()
+            .Produces(StatusCodes.Status400BadRequest)
+            .Produces(StatusCodes.Status401Unauthorized)
+            .Produces(StatusCodes.Status403Forbidden)
+            .WithOpenApi();
+        
+        group.MapGet("/v2/{id}", GetHabitV2)
+            .WithName(nameof(GetHabitV2))
+            .Produces<HabitWithTagsDtoV2>()
+            .Produces(StatusCodes.Status400BadRequest)
+            .Produces(StatusCodes.Status401Unauthorized)
+            .Produces(StatusCodes.Status403Forbidden)
+            .WithOpenApi();
+        
         return app;
     }
     
@@ -139,6 +155,112 @@ public static class HabitEndpoints
         return TypedResults.Ok(paginationResult);
     }
 
+    /// <summary>
+    /// Retrieves a specific habit by ID
+    /// </summary>
+    /// <returns>The requested habit</returns>
+    public static async Task<IResult> GetHabit(string id,
+        HttpContext context,
+        UserContext userContext,
+        ApplicationDbContext dbContext,
+        LinkService linkService,
+        DataShapingService dataShapingService,
+        CancellationToken cancellationToken)
+    {
+        string? userId = await userContext.GetUserIdAsync(cancellationToken);
+
+        if (string.IsNullOrEmpty(userId))
+        {
+            return Results.Unauthorized();
+        }
+        
+        var query = new HabitQueryParameters
+        {
+            Fields = context.Request.Query["fields"].ToString(),
+            Accept = context.Request.Headers.Accept.ToString()
+        };
+        
+        if (!dataShapingService.Validate<HabitWithTagsDto>(query.Fields))
+        {
+            return Results.Problem(
+                statusCode: StatusCodes.Status400BadRequest,
+                detail: $"The provided data shaping fields are not valid: {query.Fields}.");
+        }
+
+        HabitWithTagsDto? habitDto = await dbContext.Habits
+            .Where(h => h.Id == id && h.UserId == userId)
+            .Select(HabitQueries.ProjectToDtoWithTags()).FirstOrDefaultAsync(cancellationToken);
+
+        if (habitDto == null)
+        {
+            return Results.NotFound();
+        }
+
+        ExpandoObject shapedHabitDto = dataShapingService.ShapeData(habitDto, query.Fields);
+
+        if (query.IncludeLinks)
+        {
+            List<LinkDto> links = CreateLinksForHabit(linkService, id, query.Fields);
+
+            shapedHabitDto.TryAdd("links", links);
+        }
+
+        return TypedResults.Ok(shapedHabitDto);
+    }
+
+    /// <summary>
+    /// Retrieves a specific habit by ID with version 2 of the API
+    /// </summary>
+    /// <returns>The requested habit</returns>
+    public static async Task<IResult> GetHabitV2(string id,
+        HttpContext context,
+        UserContext userContext,
+        ApplicationDbContext dbContext,
+        LinkService linkService,
+        DataShapingService dataShapingService,
+        CancellationToken cancellationToken)
+    {
+        string? userId = await userContext.GetUserIdAsync(cancellationToken);
+
+        if (string.IsNullOrEmpty(userId))
+        {
+            return Results.Unauthorized();
+        }
+        
+        var query = new HabitQueryParameters
+        {
+            Fields = context.Request.Query["fields"].ToString(),
+            Accept = context.Request.Headers.Accept.ToString()
+        };
+        
+        if (!dataShapingService.Validate<HabitWithTagsDtoV2>(query.Fields))
+        {
+            return Results.Problem(
+                statusCode: StatusCodes.Status400BadRequest,
+                detail: $"The provided data shaping fields are not valid: {query.Fields}.");
+        }
+
+        HabitWithTagsDtoV2? habitDto = await dbContext.Habits
+            .Where(h => h.Id == id && h.UserId == userId)
+            .Select(HabitQueries.ProjectToDtoWithTagsV2()).FirstOrDefaultAsync(cancellationToken);
+
+        if (habitDto == null)
+        {
+            return Results.NotFound();
+        }
+
+        ExpandoObject shapedHabitDto = dataShapingService.ShapeData(habitDto, query.Fields);
+
+        if (query.IncludeLinks)
+        {
+            List<LinkDto> links = CreateLinksForHabit(linkService, id, query.Fields);
+
+            shapedHabitDto.TryAdd("links", links);
+        }
+
+        return TypedResults.Ok(shapedHabitDto);
+    }
+    
     private static List<LinkDto> CreateLinksForHabits(LinkService linkService,
         HabitsQueryParameters parameters,
         bool hasNextPage,
