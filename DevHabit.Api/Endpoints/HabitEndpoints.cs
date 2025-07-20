@@ -82,6 +82,15 @@ public static class HabitEndpoints
             .Produces(StatusCodes.Status404NotFound)
             .WithOpenApi();
         
+        group.MapDelete("/{id}", DeleteHabit)
+            .WithName(nameof(DeleteHabit))
+            .Produces(StatusCodes.Status204NoContent)
+            .Produces(StatusCodes.Status400BadRequest)
+            .Produces(StatusCodes.Status401Unauthorized)
+            .Produces(StatusCodes.Status403Forbidden)
+            .Produces(StatusCodes.Status404NotFound)
+            .WithOpenApi();
+        
         return app;
     }
     
@@ -426,6 +435,37 @@ public static class HabitEndpoints
         habit.Name = habitDto.Name;
         habit.Description = habitDto.Description;
         habit.UpdatedAtUtc = DateTime.UtcNow;
+
+        await dbContext.SaveChangesAsync(cancellationToken);
+
+        return Results.NoContent();
+    }
+    
+    /// <summary>
+    /// Deletes a habit
+    /// </summary>
+    /// <returns>No content on success</returns>
+    private static async Task<IResult> DeleteHabit(string id,
+        UserContext userContext, 
+        ApplicationDbContext dbContext,
+        CancellationToken cancellationToken)
+    {
+        string? userId = await userContext.GetUserIdAsync(cancellationToken);
+
+        if (string.IsNullOrEmpty(userId))
+        {
+            return Results.Unauthorized();
+        }
+
+        Habit? habit =
+            await dbContext.Habits.FirstOrDefaultAsync(h => h.Id == id && h.UserId == userId, cancellationToken);
+
+        if (habit == null)
+        {
+            return Results.NotFound();
+        }
+
+        dbContext.Habits.Remove(habit);
 
         await dbContext.SaveChangesAsync(cancellationToken);
 
