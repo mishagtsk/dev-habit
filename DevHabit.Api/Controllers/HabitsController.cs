@@ -28,7 +28,10 @@ namespace DevHabit.Api.Controllers;
     CustomMediaTypeNames.Application.HateoasJsonV2)]
 [ProducesResponseType(StatusCodes.Status401Unauthorized)]
 [ProducesResponseType(StatusCodes.Status403Forbidden)]
-public sealed class HabitsController(ApplicationDbContext dbContext, LinkService linkService, UserContext userContext)
+
+// Set internal instead of public - so this controller is not scanned by api explorer - so we can define identical endpoints
+// for minimal api without touching this controller
+internal sealed class HabitsController(ApplicationDbContext dbContext, LinkService linkService, UserContext userContext)
     : ControllerBase
 {
     /// <summary>
