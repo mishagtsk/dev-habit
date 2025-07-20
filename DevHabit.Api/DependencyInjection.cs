@@ -86,6 +86,8 @@ internal static class DependencyInjection
         builder.Services.ConfigureOptions<ConfigureSwaggerUIOptions>();
         
         builder.Services.AddResponseCaching();
+
+        builder.Services.AddEndpointsApiExplorer();
         
         return builder;
     }

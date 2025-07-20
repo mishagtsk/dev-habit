@@ -1,5 +1,6 @@
 using System.Diagnostics.CodeAnalysis;
 using DevHabit.Api;
+using DevHabit.Api.Endpoints;
 using DevHabit.Api.Extensions;
 using DevHabit.Api.Middleware;
 using Scalar.AspNetCore;
@@ -61,6 +62,7 @@ app.UseRateLimiter();
 app.UseMiddleware<ETagMiddleware>();
 
 app.MapControllers();
+app.MapHabitEndpoints();
 
 await app.RunAsync();
 
