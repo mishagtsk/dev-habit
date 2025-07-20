@@ -7,6 +7,7 @@ using DevHabit.Api.DTOs.Habits;
 using DevHabit.Api.Entities;
 using DevHabit.Api.Services;
 using DevHabit.Api.Services.Sorting;
+using FluentValidation;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Primitives;
@@ -48,6 +49,14 @@ public static class HabitEndpoints
         group.MapGet("/v2/{id}", GetHabitV2)
             .WithName(nameof(GetHabitV2))
             .Produces<HabitWithTagsDtoV2>()
+            .Produces(StatusCodes.Status400BadRequest)
+            .Produces(StatusCodes.Status401Unauthorized)
+            .Produces(StatusCodes.Status403Forbidden)
+            .WithOpenApi();
+        
+        group.MapPost("/", CreateHabit)
+            .WithName(nameof(CreateHabit))
+            .Produces<HabitDto>(StatusCodes.Status201Created)
             .Produces(StatusCodes.Status400BadRequest)
             .Produces(StatusCodes.Status401Unauthorized)
             .Produces(StatusCodes.Status403Forbidden)
@@ -159,7 +168,7 @@ public static class HabitEndpoints
     /// Retrieves a specific habit by ID
     /// </summary>
     /// <returns>The requested habit</returns>
-    public static async Task<IResult> GetHabit(string id,
+    private static async Task<IResult> GetHabit(string id,
         HttpContext context,
         UserContext userContext,
         ApplicationDbContext dbContext,
@@ -212,7 +221,7 @@ public static class HabitEndpoints
     /// Retrieves a specific habit by ID with version 2 of the API
     /// </summary>
     /// <returns>The requested habit</returns>
-    public static async Task<IResult> GetHabitV2(string id,
+    private static async Task<IResult> GetHabitV2(string id,
         HttpContext context,
         UserContext userContext,
         ApplicationDbContext dbContext,
@@ -261,6 +270,57 @@ public static class HabitEndpoints
         return TypedResults.Ok(shapedHabitDto);
     }
     
+    /// <summary>
+    /// Creates a new habit
+    /// </summary>
+    /// <returns>The created habit</returns>
+    private static async Task<IResult> CreateHabit(CreateHabitDto createHabitDto,
+        HttpContext context,
+        UserContext userContext,
+        ApplicationDbContext dbContext,
+        LinkService linkService,
+        IValidator<CreateHabitDto> validator,
+        CancellationToken cancellationToken)
+    {
+        string? userId = await userContext.GetUserIdAsync(cancellationToken);
+
+        if (string.IsNullOrEmpty(userId))
+        {
+            return Results.Unauthorized();
+        }
+        
+        await validator.ValidateAndThrowAsync(createHabitDto, cancellationToken);
+
+        Habit habit = createHabitDto.ToEntity(userId);
+
+        if (habit.AutomationSource is not null &&
+            await dbContext.Habits.AnyAsync(h => h.UserId == userId && h.AutomationSource == habit.AutomationSource,
+                cancellationToken: cancellationToken))
+        {
+            return Results.Problem(
+                statusCode: StatusCodes.Status400BadRequest,
+                detail: $"Only one habit with this automation source is allowed: '{habit.AutomationSource}'");
+        }
+
+        dbContext.Habits.Add(habit);
+
+        await dbContext.SaveChangesAsync(cancellationToken);
+
+        HabitDto habitDto = habit.ToDto();
+
+        var acceptHeader = new AcceptHeaderDto
+        {
+            Accept = context.Request.Headers.Accept.ToString()
+        };
+        
+        if (acceptHeader.IncludeLinks)
+        {
+            habitDto.Links = CreateLinksForHabit(linkService, habitDto.Id, null);
+        }
+
+        return TypedResults.CreatedAtRoute(habitDto, nameof(GetHabit), new { id = habit.Id });
+    }
+
     private static List<LinkDto> CreateLinksForHabits(LinkService linkService,
         HabitsQueryParameters parameters,
         bool hasNextPage,
