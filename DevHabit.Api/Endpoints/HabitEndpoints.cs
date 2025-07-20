@@ -62,6 +62,15 @@ public static class HabitEndpoints
             .Produces(StatusCodes.Status403Forbidden)
             .WithOpenApi();
         
+        group.MapPut("/{id}", UpdateHabit)
+            .WithName(nameof(UpdateHabit))
+            .Produces(StatusCodes.Status204NoContent)
+            .Produces(StatusCodes.Status400BadRequest)
+            .Produces(StatusCodes.Status401Unauthorized)
+            .Produces(StatusCodes.Status403Forbidden)
+            .Produces(StatusCodes.Status404NotFound)
+            .WithOpenApi();
+        
         return app;
     }
     
@@ -321,6 +330,53 @@ public static class HabitEndpoints
         return TypedResults.CreatedAtRoute(habitDto, nameof(GetHabit), new { id = habit.Id });
     }
 
+    /// <summary>
+    /// Updates an existing habit
+    /// </summary>
+    /// <returns>No content on success</returns>
+    private static async Task<IResult> UpdateHabit(
+        string id, 
+        UpdateHabitDto updateHabitDto,
+        IValidator<UpdateHabitDto> validator,
+        UserContext userContext,
+        ApplicationDbContext dbContext,
+        CancellationToken cancellationToken)
+    {
+        await validator.ValidateAndThrowAsync(updateHabitDto, cancellationToken);
+        
+        string? userId = await userContext.GetUserIdAsync(cancellationToken);
+
+        if (string.IsNullOrEmpty(userId))
+        {
+            return Results.Unauthorized();
+        }
+
+        Habit? habit =
+            await dbContext.Habits.FirstOrDefaultAsync(h => h.Id == id && h.UserId == userId, cancellationToken);
+
+        if (habit == null)
+        {
+            return Results.NotFound();
+        }
+
+        if (habit.AutomationSource is null &&
+            updateHabitDto.AutomationSource is not null &&
+            await dbContext.Habits.AnyAsync(
+                h => h.UserId == userId && h.AutomationSource == updateHabitDto.AutomationSource,
+                cancellationToken: cancellationToken))
+        {
+            return Results.Problem(
+                statusCode: StatusCodes.Status400BadRequest,
+                detail: $"Only one habit with this automation source is allowed: '{habit.AutomationSource}'");
+        }
+
+        habit.UpdateFromDto(updateHabitDto);
+
+        await dbContext.SaveChangesAsync(cancellationToken);
+
+        return Results.NoContent();
+    }
+    
     private static List<LinkDto> CreateLinksForHabits(LinkService linkService,
         HabitsQueryParameters parameters,
         bool hasNextPage,
