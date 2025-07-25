@@ -1,6 +1,7 @@
 using System.Net.Http.Headers;
 using System.Reflection;
 using System.Text;
+using System.Text.Json;
 using System.Threading.RateLimiting;
 using Asp.Versioning;
 using Azure.Monitor.OpenTelemetry.AspNetCore;
@@ -31,6 +32,7 @@ using OpenTelemetry.Resources;
 using OpenTelemetry.Trace;
 using Quartz;
 using Refit;
+using JsonOptions = Microsoft.AspNetCore.Http.Json.JsonOptions;
 using ProblemDetails = Microsoft.AspNetCore.Mvc.ProblemDetails;
 
 namespace DevHabit.Api;
@@ -39,6 +41,12 @@ internal static class DependencyInjection
 {
     public static WebApplicationBuilder AddApiServices(this WebApplicationBuilder builder)
     {
+        builder.Services.Configure<JsonOptions>(options =>
+        {
+            options.SerializerOptions.DictionaryKeyPolicy = JsonNamingPolicy.CamelCase;
+            options.SerializerOptions.PropertyNamingPolicy = JsonNamingPolicy.CamelCase;
+        });
+        
         builder.Services.AddControllers(options =>
             {
                 options.ReturnHttpNotAcceptable = true;

@@ -5,6 +5,7 @@ using DevHabit.Api.Database;
 using DevHabit.Api.DTOs.Common;
 using DevHabit.Api.DTOs.Habits;
 using DevHabit.Api.Entities;
+using DevHabit.Api.Extensions;
 using DevHabit.Api.Services;
 using DevHabit.Api.Services.Sorting;
 using FluentValidation;
@@ -190,7 +191,7 @@ public static class HabitEndpoints
                 CreateLinksForHabits(linkService, query, paginationResult.HasNextPage, paginationResult.HasPreviousPage);
         }
         
-        return TypedResults.Ok(paginationResult);
+        return TypedResults.Extensions.OkWithContentNegotiation(paginationResult);
     }
 
     /// <summary>
@@ -243,7 +244,7 @@ public static class HabitEndpoints
             shapedHabitDto.TryAdd("links", links);
         }
 
-        return TypedResults.Ok(shapedHabitDto);
+        return TypedResults.Extensions.OkWithContentNegotiation(shapedHabitDto);
     }
 
     /// <summary>
@@ -296,7 +297,7 @@ public static class HabitEndpoints
             shapedHabitDto.TryAdd("links", links);
         }
 
-        return TypedResults.Ok(shapedHabitDto);
+        return TypedResults.Extensions.OkWithContentNegotiation(shapedHabitDto);
     }
     
     /// <summary>
