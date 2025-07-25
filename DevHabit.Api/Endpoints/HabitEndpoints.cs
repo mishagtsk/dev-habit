@@ -1,5 +1,7 @@
 using System.Dynamic;
 using System.Net.Mime;
+using Asp.Versioning;
+using Asp.Versioning.Builder;
 using DevHabit.Api.Controllers;
 using DevHabit.Api.Database;
 using DevHabit.Api.DTOs.Common;
@@ -21,10 +23,16 @@ public static class HabitEndpoints
 {
     public static IEndpointRouteBuilder MapHabitEndpoints(this IEndpointRouteBuilder app)
     {
+        ApiVersionSet apiVersionSet = app.NewApiVersionSet()
+            .HasApiVersion(new ApiVersion(1.0))
+            .ReportApiVersions()
+            .Build();
+        
         RouteGroupBuilder group = app.MapGroup("habits")
             .WithTags("Habits")
             .RequireAuthorization(policy => policy.RequireRole(Roles.Member))
             .WithOpenApi()
+            .WithApiVersionSet(apiVersionSet)
             .WithMetadata(new ProducesAttribute(
                 MediaTypeNames.Application.Json,
                 CustomMediaTypeNames.Application.JsonV1,
@@ -41,20 +49,22 @@ public static class HabitEndpoints
             .Produces(StatusCodes.Status403Forbidden)
             .WithOpenApi();
         
-        group.MapGet("/v1/{id}", GetHabit)
+        group.MapGet("/{id}", GetHabit)
             .WithName(nameof(GetHabit))
             .Produces<HabitWithTagsDto>()
             .Produces(StatusCodes.Status400BadRequest)
             .Produces(StatusCodes.Status401Unauthorized)
             .Produces(StatusCodes.Status403Forbidden)
+            .MapToApiVersion(1.0)
             .WithOpenApi();
         
-        group.MapGet("/v2/{id}", GetHabitV2)
+        group.MapGet("/{id}", GetHabitV2)
             .WithName(nameof(GetHabitV2))
             .Produces<HabitWithTagsDtoV2>()
             .Produces(StatusCodes.Status400BadRequest)
             .Produces(StatusCodes.Status401Unauthorized)
             .Produces(StatusCodes.Status403Forbidden)
+            .HasApiVersion(2.0)
             .WithOpenApi();
         
         group.MapPost("/", CreateHabit)
