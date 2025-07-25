@@ -10,6 +10,11 @@ public sealed class LinkService(LinkGenerator linkGenerator, IHttpContextAccesso
         string? href =
             linkGenerator.GetUriByAction(httpContextAccessor.HttpContext!, endpointName, controller, values);
 
+        if (string.IsNullOrWhiteSpace(href))
+        {
+            href = linkGenerator.GetUriByName(httpContextAccessor.HttpContext!, endpointName, values);
+        }
+        
         return new LinkDto
         {
             Href = href ?? throw new Exception("Invalid endpoint name provided."),
