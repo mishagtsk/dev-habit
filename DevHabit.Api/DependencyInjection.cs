@@ -91,7 +91,7 @@ internal static class DependencyInjection
         // This is pure swagger
         builder.Services.AddSwaggerGen();
         builder.Services.ConfigureOptions<ConfigureSwaggerGenOptions>();
-        builder.Services.ConfigureOptions<ConfigureSwaggerUIOptions>();
+        //builder.Services.ConfigureOptions<ConfigureSwaggerUIOptions>();
         
         builder.Services.AddResponseCaching();
 

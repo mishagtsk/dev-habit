@@ -1,4 +1,5 @@
 using System.Diagnostics.CodeAnalysis;
+using Asp.Versioning.ApiExplorer;
 using DevHabit.Api;
 using DevHabit.Api.Endpoints;
 using DevHabit.Api.Extensions;
@@ -22,9 +23,16 @@ builder
 
 WebApplication app = builder.Build();
 
+app.MapHabitEndpoints();
 // This is pure swagger
 app.UseSwagger();
-app.UseSwaggerUI();
+app.UseSwaggerUI(options =>
+{
+    foreach (ApiVersionDescription description in app.DescribeApiVersions())
+    {
+        options.SwaggerEndpoint($"/swagger/{description.GroupName}/swagger.json", description.GroupName);
+    }
+});
 
 app.MapScalarApiReference(options =>
 {
@@ -62,7 +70,6 @@ app.UseRateLimiter();
 app.UseMiddleware<ETagMiddleware>();
 
 app.MapControllers();
-app.MapHabitEndpoints();
 
 await app.RunAsync();
 
